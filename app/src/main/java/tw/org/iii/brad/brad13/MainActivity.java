@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import android.Manifest;
 import android.app.ProgressDialog;
@@ -17,6 +18,7 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -36,7 +38,9 @@ import java.net.HttpURLConnection;
 import java.net.NetworkInterface;
 import java.net.URL;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 
 public class MainActivity extends AppCompatActivity {
     private ConnectivityManager cmgr;
@@ -178,7 +182,12 @@ public class MainActivity extends AppCompatActivity {
         try{
             URL url = new URL("https://pdfmyurl.com/?url=https://www.gamer.com.tw");
             HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
-
+            conn.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
             conn.connect();
 
             File downloadFile = new File(downloadDir, "gamer.pdf");
@@ -192,10 +201,10 @@ public class MainActivity extends AppCompatActivity {
                 fout.write(buf,0, len);
             }
 
-            bin.close();
             fout.flush();
             fout.close();
-
+            bin.close();
+            uiHandler.sendEmptyMessage(2);
             Log.v("brad", "save OK");
         }catch (Exception e){
             Log.v("brad", e.toString());
@@ -234,8 +243,21 @@ public class MainActivity extends AppCompatActivity {
             super.handleMessage(msg);
             if (msg.what == 0) img.setImageBitmap(bmp);
             if (msg.what == 1) progressDialog.dismiss();
+            if (msg.what == 2) showPDF();
         }
     }
+
+    private void showPDF(){
+        File file = new File(downloadDir, "gamer.pdf");
+        Uri pdfuri = FileProvider.getUriForFile(this, "", file);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(pdfuri, "application/pdf");
+        startActivity(intent);
+
+
+    }
+
 
 
 
