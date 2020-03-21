@@ -12,6 +12,7 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -22,16 +23,20 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity {
     private ConnectivityManager cmgr;
     private MyReceiver myReceiver;
+    private TextView mesg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mesg = findViewById(R.id.mesg);
+
         cmgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         myReceiver = new MyReceiver();
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION); // Action
         //filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        filter.addAction("brad");
         registerReceiver(myReceiver, filter);
     }
 
@@ -72,11 +77,16 @@ public class MainActivity extends AppCompatActivity {
                     BufferedReader reader =
                             new BufferedReader(
                                     new InputStreamReader(conn.getInputStream()));
-                    String line;
+                    String line; StringBuffer sb = new StringBuffer();
                     while ( (line = reader.readLine()) != null){
-                        Log.v("brad", line);
+                        sb.append(line + "\n");
                     }
                     reader.close();
+
+                    Intent intent = new Intent("brad");
+                    intent.putExtra("data", sb.toString());
+                    sendBroadcast(intent);  // Context => Activity, Service, Application
+
                 }catch (Exception e){
                     Log.v("brad", e.toString());
                 }
@@ -95,8 +105,16 @@ public class MainActivity extends AppCompatActivity {
     private class MyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.v("brad", "onReceive");
-            test1(null);
+            //Log.v("brad", "onReceive");
+            if (intent.getAction().equals("brad")){
+                String data = intent.getStringExtra("data");
+                mesg.setText(data);
+            }else if(intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                test1(null);
+            }
+
+
+
         }
     }
 
