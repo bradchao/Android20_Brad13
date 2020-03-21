@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchPDF(){
         try{
-            URL url = new URL("https://pdfmyurl.com/?url=https://www.gamer.com.tw");
+            URL url = new URL("https://pdfmyurl.com/?url=https://www.bradchao.com");
             HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
             conn.setHostnameVerifier(new HostnameVerifier() {
                 @Override
@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
             });
             conn.connect();
 
-            File downloadFile = new File(downloadDir, "gamer.pdf");
+            File downloadFile = new File(downloadDir, "brad.pdf");
             FileOutputStream fout = new FileOutputStream(downloadFile);
 
             byte[] buf = new byte[4096*1024];
@@ -237,6 +237,14 @@ public class MainActivity extends AppCompatActivity {
 
     private UIHandler uiHandler = new UIHandler();
 
+    public void test6(View view) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Sharing URL");
+        intent.putExtra(Intent.EXTRA_TEXT, "http://www.url.com");
+        startActivity(Intent.createChooser(intent, "Share URL"));
+    }
+
     private class UIHandler extends Handler {
         @Override
         public void handleMessage(@NonNull Message msg) {
@@ -249,10 +257,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void showPDF(){
         File file = new File(downloadDir, "gamer.pdf");
-        Uri pdfuri = FileProvider.getUriForFile(this, "", file);
+        Uri pdfuri = FileProvider.getUriForFile(this,
+                getPackageName()+".provider", file);
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(pdfuri, "application/pdf");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivity(intent);
 
 
